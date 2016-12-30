@@ -1,14 +1,17 @@
 package com.dds.impl;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
-public class DynamicDataSource extends AbstractRoutingDataSource {
-	private Map<String, DataSource>dsMap = new HashMap<String, DataSource>();
+public class DynamicDataSource extends AbstractRoutingDataSource implements BeanFactoryAware {
+	private BeanFactory beanFactory = null;
 	private static ThreadLocal<String> tlDSID = new ThreadLocal<String>();
 	
 	public DynamicDataSource() {
@@ -19,14 +22,23 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
 	@Override
 	protected DataSource determineTargetDataSource() {
 		String dsID = (String)determineCurrentLookupKey();
-		DataSource ds = dsMap.get(dsID);
-		if(ds == null){
-			ds = resolveSpecifiedDataSource(dsID);
-			dsMap.put(dsID, ds);
+		String dsBeanName = constructDSBeanName(dsID);
+		DefaultListableBeanFactory dlbf = (DefaultListableBeanFactory)beanFactory;
+		DataSource ds = null;
+		if(!dlbf.containsBean(dsBeanName)){
+			synchronized (beanFactory) {
+				if(!dlbf.containsBean(dsBeanName)){
+					ds = resolveSpecifiedDataSource(dsID);
+					dlbf.registerSingleton(dsBeanName, ds);
+				}
+			}
 		}
+		ds = dlbf.getBean(dsBeanName, DataSource.class);
 		return ds;
 	}
-	
+	protected String constructDSBeanName(String dsID){
+		return "_datasource_"+dsID;
+	}
 	public static void setDSID(String dsID){
 		tlDSID.set(dsID);
 	}
@@ -34,6 +46,11 @@ public class DynamicDataSource extends AbstractRoutingDataSource {
 	@Override
 	protected Object determineCurrentLookupKey() {
 		return tlDSID.get();
+	}
+
+	@Override
+	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+		this.beanFactory = beanFactory;
 	}
 
 }
