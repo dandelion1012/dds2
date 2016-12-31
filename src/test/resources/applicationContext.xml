@@ -21,11 +21,11 @@
 	<bean id="jdbcTemplate"  class="org.springframework.jdbc.core.JdbcTemplate" 
 		p:dataSource-ref="dataSource" />
 		
-	<bean id="dataSourceFactory" class="com.dds.test.ddsImpl.MyDataSourceFactory"
+	<bean id="dataSourceInfoFactory" class="com.dds.test.ddsImpl.MyDataSourceInfoFactory"
 		p:jdbcTemplate-ref="jdbcTemplate"/>
 	
 	<bean id="dsLookup" class="com.dds.impl.DynamicDataSourceLookup"  
-		p:dataSourceFactory-ref="dataSourceFactory"/>
+		p:dataSourceInfoFactory-ref="dataSourceInfoFactory"/>
 
 	<bean id="dds" class="com.dds.impl.DynamicDataSource"
 	p:dataSourceLookup-ref="dsLookup" />

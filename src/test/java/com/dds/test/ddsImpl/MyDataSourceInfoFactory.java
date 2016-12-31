@@ -8,10 +8,10 @@ import java.util.List;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowCallbackHandler;
 
-import com.dds.impl.AbstractDataSourceFactory;
 import com.dds.impl.DataSourceInfo;
+import com.dds.impl.IDataSourceInfoFactory;
 
-public class MyDataSourceFactory extends AbstractDataSourceFactory {
+public class MyDataSourceInfoFactory implements IDataSourceInfoFactory {
 	private JdbcTemplate jdbcTemplate = null;
 	
 	public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
@@ -19,7 +19,7 @@ public class MyDataSourceFactory extends AbstractDataSourceFactory {
 	}
 
 	@Override
-	public DataSourceInfo findDataSourceInfo(String dsID) throws Exception {
+	public DataSourceInfo createDataSourceInfo(String dsID) throws RuntimeException {
 		String sql = "select dsid,driverclsname,url, username,password from dsinfo where dsid = ?";
 		final List<DataSourceInfo> list = new ArrayList<DataSourceInfo>();
 		jdbcTemplate.query(sql, new String[]{dsID}, new RowCallbackHandler(){
